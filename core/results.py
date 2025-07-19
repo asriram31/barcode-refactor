@@ -171,6 +171,7 @@ class IntensityResults(ResultsBase):
 class ChannelResults(ResultsBase):
     """Complete analysis results for a single channel."""
 
+    filepath: str
     channel: int
     dim_channel_flag: int = 0  # 0=normal, 1=dim channel
 
@@ -180,30 +181,34 @@ class ChannelResults(ResultsBase):
 
     @classmethod
     def _get_base_headers(cls) -> List[str]:
-        return ["Channel", "Flags"]
+        return ["Filepath", "Channel", "Flags"]
 
     @classmethod
-    def get_metrics(cls, just_metrics: bool = True) -> List[Metrics]:
+    def get_metrics(cls, just_metrics: bool = False) -> List[Metrics]:
         return (
-            ([Metrics.IGNORE, Metrics.IGNORE] if not just_metrics else [])
+            (
+                [Metrics.FILEPATH, Metrics.CHANNEL, Metrics.FLAGS]
+                if not just_metrics
+                else []
+            )
             + BinarizationResults.get_metrics()
             + IntensityResults.get_metrics()
             + FlowResults.get_metrics()
         )
 
     @classmethod
-    def get_units(cls, just_metrics: bool = True) -> List[Units]:
+    def get_units(cls, just_metrics: bool = False) -> List[Units]:
         return (
-            ([Units.NONE, Units.NONE] if not just_metrics else [])
+            ([Units.NONE, Units.NONE, Units.NONE] if not just_metrics else [])
             + BinarizationResults.get_units()
             + IntensityResults.get_units()
             + FlowResults.get_units()
         )
 
-    def get_data(self, just_metrics: bool = True) -> List[float]:
+    def get_data(self, just_metrics: bool = False) -> List[float]:
         data = []
         if not just_metrics:
-            data = [self.channel, self.dim_channel_flag]
+            data = [self.filepath, self.channel, self.dim_channel_flag]
         data.extend(self.binarization.get_data())
         data.extend(self.intensity.get_data())
         data.extend(self.flow.get_data())

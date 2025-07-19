@@ -4,6 +4,7 @@ from tkinter import filedialog
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 import numpy as np
+import nd2
 
 from utils.analysis import binarize
 
@@ -11,30 +12,40 @@ try:
     import tifffile
 except ImportError:
     tifffile = None
-try:
-    from nd2reader import ND2Reader
-except ImportError:
-    ND2Reader = None
 
 
-def load_first_frame(file_path):
+def load_first_frame(file_path, channel):
     ext = file_path.lower().split(".")[-1]
     if ext in ["tif", "tiff"] and tifffile:
         img = tifffile.imread(file_path)
         if img.ndim == 3:
             return img[0]
         if img.ndim == 4:
-            return img[0, :, :, 0]
+            total_channels = img.shape[3]
+            while channel < 0:
+                channel = total_channels + channel
+            # Clamp to valid range
+            if channel >= total_channels:
+                channel = total_channels - 1
+            return img[0, :, :, channel]
         return img
-    elif ext == "nd2" and ND2Reader:
-        with ND2Reader(file_path) as images:
-            # ND2Reader returns an iterable over frames; grab the first frame
-            # It may return a (y, x) or (c, y, x) array; handle both
-            arr = np.array(images[0])
-            # If ND2 contains channels, select channel 0 by default
-            if arr.ndim == 3:
-                arr = arr[0]
-            return arr
+    elif ext == "nd2":
+        with nd2.ND2File(file_path) as ndfile:
+            file = ndfile.asarray()
+            if len(ndfile.sizes) not in [3, 4] or "T" not in ndfile.sizes or "Z" in ndfile.sizes:
+                raise ValueError(
+                    "Only TIFF and ND2 are supported in this demo, and required libraries must be installed."
+                )
+            img = np.swapaxes(np.swapaxes(file, 1, 2), 2, 3)
+            if len(ndfile.sizes) == 3:
+                return img[0]
+            total_channels = img.shape[3]
+            while channel < 0:
+                channel = total_channels + channel
+            # Clamp to valid range
+            if channel >= total_channels:
+                channel = total_channels - 1
+            return img[0, :, :, channel]
     raise ValueError(
         "Only TIFF and ND2 are supported in this demo, and required libraries must be installed."
     )

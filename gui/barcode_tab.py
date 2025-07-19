@@ -12,7 +12,9 @@ def create_barcode_frame(
 
     ca = aggregation_config
 
-    metrics_list_str = [metric.value for metric in ChannelResults.get_metrics()]
+    metrics_list_str = [
+        metric.value for metric in ChannelResults.get_metrics(just_metrics=True)
+    ]
 
     headers = ["Default"] + metrics_list_str
 

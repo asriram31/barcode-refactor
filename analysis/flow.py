@@ -62,9 +62,12 @@ def calculate_optical_flow(
 
     start_frame, end_frame = frame_pair
 
+    frame_int = opt_config.frame_interval_s.get()
+    if frame_int == 0:
+        frame_int = 1
     # Convert from pixels/interval to nm/sec
     speed_conversion_factor = opt_config.nm_pixel_ratio.get() / (
-        opt_config.frame_interval_s.get() * (end_frame - start_frame)
+        frame_int * (end_frame - start_frame)
     )
 
     params = (None, 0.5, 3, opt_config.window_size.get(), 3, 5, 1.2, 0)

@@ -203,8 +203,13 @@ def create_binarization_frame(
             update_preview()
             return
         try:
-            preview_data["frame"] = load_first_frame(path)
+            if config.channels.parse_all_channels.get():
+                channel = 0
+            else:
+                channel = config.channels.selected_channel.get()
+                preview_data["frame"] = load_first_frame(path, channel)
         except Exception as e:
+            print(path)
             print(f"[Preview] couldn't load first frame: {e}")
             preview_data["frame"] = None
         update_preview()
@@ -213,7 +218,10 @@ def create_binarization_frame(
         dir_path = ci.dir_path.get()
         if dir_path and os.path.isdir(dir_path):
             files = [
-                f for f in os.listdir(dir_path) if f.lower().endswith((".tif", ".nd2"))
+                os.path.join(dir, f).removeprefix(dir_path + os.path.sep)
+                for dir, _, files in os.walk(dir_path)
+                for f in files
+                if f.lower().endswith((".tif", ".nd2"))
             ]
             sample_file_combobox["values"] = files
             sample_file_combobox.config(state="readonly")
@@ -227,6 +235,8 @@ def create_binarization_frame(
     # Wire up events
     ci.file_path.trace_add("write", load_preview_frame)
     cp.sample_file.trace_add("write", load_preview_frame)
+    config.channels.selected_channel.trace_add("write", load_preview_frame)
+    config.channels.parse_all_channels.trace_add("write", load_preview_frame)
     cb.threshold_offset.trace_add("write", update_preview)
     ci.dir_path.trace_add("write", update_sample_file_options)
 

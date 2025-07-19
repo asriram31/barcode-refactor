@@ -8,6 +8,7 @@ from core import BarcodeConfig, ChannelResults
 
 
 def run_analysis_pipeline(
+    filepath: str,
     file: np.ndarray,
     channel: int,
     config: BarcodeConfig,
@@ -15,7 +16,7 @@ def run_analysis_pipeline(
     fail_file_loc: str,
 ) -> Tuple[ChannelResults, List[plt.Figure]]:
     """Run all enabled analysis modules for a single channel."""
-    results = ChannelResults(channel=channel)
+    results = ChannelResults(filepath=filepath, channel=channel)
     figures = []
 
     # Run binarization analysis
