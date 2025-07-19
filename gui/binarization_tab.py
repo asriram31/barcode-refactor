@@ -7,7 +7,7 @@ import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from core import PreviewConfig, InputConfig, BarcodeConfig, ChannelConfig
+from core import PreviewConfig, InputConfig, BarcodeConfig
 from .preview_binarization import load_first_frame, binarize
 
 
@@ -218,8 +218,10 @@ def create_binarization_frame(
         dir_path = ci.dir_path.get()
         if dir_path and os.path.isdir(dir_path):
             files = [
-                os.path.join(dir, f).removeprefix(dir_path + os.path.sep) for dir, _, files in os.walk(dir_path) for f in files
-                if f.lower().endswith(('.tif', '.nd2'))
+                os.path.join(dir, f).removeprefix(dir_path + os.path.sep)
+                for dir, _, files in os.walk(dir_path)
+                for f in files
+                if f.lower().endswith((".tif", ".nd2"))
             ]
             sample_file_combobox["values"] = files
             sample_file_combobox.config(state="readonly")
@@ -281,4 +283,3 @@ def create_binarization_frame(
     pf_stop_spin.grid(row=row_b, column=1, padx=5, pady=5)
 
     return frame
-

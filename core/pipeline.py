@@ -61,11 +61,11 @@ def save_analysis_results(
     if all_results:
         if is_single_file:
             # Single file: fail fast if can't write
-            results_to_csv(all_results, csv_path)
+            results_to_csv(all_results, csv_path, just_metrics=False)
         else:
             # Directory: try alternate names if file exists
             try:
-                results_to_csv(all_results, csv_path, just_metrics = False)
+                results_to_csv(all_results, csv_path, just_metrics=False)
             except:
                 counter = 1
                 while True:
@@ -75,7 +75,7 @@ def save_analysis_results(
                     if not os.path.exists(csv_path):
                         break
                     counter += 1
-                results_to_csv(all_results, csv_path, just_metrics = False)
+                results_to_csv(all_results, csv_path, just_metrics=False)
     else:
         print("Warning: No results to write - all files may have failed processing")
 

@@ -170,6 +170,7 @@ class IntensityResults(ResultsBase):
 @dataclass
 class ChannelResults(ResultsBase):
     """Complete analysis results for a single channel."""
+
     filepath: str
     channel: int
     dim_channel_flag: int = 0  # 0=normal, 1=dim channel
@@ -183,16 +184,20 @@ class ChannelResults(ResultsBase):
         return ["Filepath", "Channel", "Flags"]
 
     @classmethod
-    def get_metrics(cls, just_metrics: bool = True) -> List[Metrics]:
+    def get_metrics(cls, just_metrics: bool = False) -> List[Metrics]:
         return (
-            ([Metrics.FILEPATH, Metrics.CHANNEL, Metrics.FLAGS] if not just_metrics else [])
+            (
+                [Metrics.FILEPATH, Metrics.CHANNEL, Metrics.FLAGS]
+                if not just_metrics
+                else []
+            )
             + BinarizationResults.get_metrics()
             + IntensityResults.get_metrics()
             + FlowResults.get_metrics()
         )
 
     @classmethod
-    def get_units(cls, just_metrics: bool = True) -> List[Units]:
+    def get_units(cls, just_metrics: bool = False) -> List[Units]:
         return (
             ([Units.NONE, Units.NONE, Units.NONE] if not just_metrics else [])
             + BinarizationResults.get_units()
