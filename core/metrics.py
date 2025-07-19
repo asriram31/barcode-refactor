@@ -31,6 +31,9 @@ class Metrics(Enum):
     MODE_SKEW_DIFF = "Mode Skewness Change"
 
     IGNORE = "Ignore this"
+    FILEPATH = "File"
+    CHANNEL = "Channel"
+    FLAGS = "Flags"
 
 
 class Units(Enum):

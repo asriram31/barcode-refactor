@@ -62,9 +62,12 @@ def calculate_optical_flow(
 
     start_frame, end_frame = frame_pair
 
+    frame_int = opt_config.frame_interval_s.get()
+    if frame_int == 0:
+        frame_int = 1 
     # Convert from pixels/interval to nm/sec
     speed_conversion_factor = opt_config.nm_pixel_ratio.get() / (
-        opt_config.frame_interval_s.get() * (end_frame - start_frame)
+        frame_int * (end_frame - start_frame)
     )
 
     params = (None, 0.5, 3, opt_config.window_size.get(), 3, 5, 1.2, 0)
@@ -100,13 +103,25 @@ def aggregate_flow_stats(
     speeds = np.array(speeds)
 
     # Metric for average direction of flow (-pi, pi) # "Flow Direction"
-    mean_theta = np.mean(thetas)
+    try:
+        mean_theta = np.mean(thetas)
+    except:
+        print("Mean Theta")
     # Metric for st. dev of flow (-pi, pi) # "Flow Directional Spread"
-    mean_sigma_theta = np.mean(sigma_thetas)
+    try:
+        mean_sigma_theta = np.mean(sigma_thetas)
+    except:
+        print("Theta Sigma")
     # Metric for avg. speed (units of nm/s) # Average speed
-    mean_speed = np.mean(speeds)
+    try:
+        mean_speed = np.mean(speeds)
+    except:
+        print("Mean Speed")
     # Calculate delta speed as (v_f - v_i)
-    delta_speed = speeds[-1] - speeds[0]
+    try:
+        delta_speed = speeds[-1] - speeds[0]
+    except:
+        print("Speed Change")
 
     return FlowResults(mean_speed, delta_speed, mean_theta, mean_sigma_theta)
 

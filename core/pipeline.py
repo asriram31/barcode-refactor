@@ -65,7 +65,7 @@ def save_analysis_results(
         else:
             # Directory: try alternate names if file exists
             try:
-                results_to_csv(all_results, csv_path)
+                results_to_csv(all_results, csv_path, just_metrics = False)
             except:
                 counter = 1
                 while True:
@@ -75,7 +75,7 @@ def save_analysis_results(
                     if not os.path.exists(csv_path):
                         break
                     counter += 1
-                results_to_csv(all_results, csv_path)
+                results_to_csv(all_results, csv_path, just_metrics = False)
     else:
         print("Warning: No results to write - all files may have failed processing")
 
@@ -147,9 +147,11 @@ def process_single_file(
 
         # Run analysis pipeline
         results, figures = run_analysis_pipeline(
-            file, channel, config, channel_output_dir, fail_file_loc
+            filepath, file, channel, config, channel_output_dir, fail_file_loc
         )
 
+        results.filepath = filepath
+        results.channel = channel
         # Set dim channel flag
         results.dim_channel_flag = 1 if is_dim else 0
         results.intensity.flag += 1 if is_dim else 0

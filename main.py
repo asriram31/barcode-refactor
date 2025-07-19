@@ -4,7 +4,7 @@ import traceback
 import matplotlib
 from tkinter import ttk, messagebox
 
-from core import BarcodeConfig, InputConfig, PreviewConfig, AggregationConfig
+from core import BarcodeConfig, InputConfig, PreviewConfig, AggregationConfig, ChannelConfig
 from gui import (
     create_barcode_frame,
     create_binarization_frame,
@@ -138,6 +138,7 @@ def main():
     input_config = InputConfig()
     preview_config = PreviewConfig()
     aggregation_config = AggregationConfig()
+    channel_config = ChannelConfig()
 
     # Create tabs
     create_tabs(
