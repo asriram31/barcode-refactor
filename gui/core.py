@@ -26,7 +26,7 @@ def generate_gui_wrapper(config_class):
         f"@dataclass",
         f"class {class_name}:",
         f'    """Auto-generated GUI wrapper for {config_class.__name__}"""',
-        f"    _core_config: {config_class.__name__}",
+        f"    _core_config: {config_class.__name__} = field(default_factory={config_class.__name__})",
         f"",
     ]
 
@@ -87,7 +87,7 @@ def generate_master_gui_config():
         "@dataclass",
         "class BarcodeConfigGUI:",
         '    """Auto-generated master GUI configuration"""',
-        "    _core_config: BarcodeConfig",
+        "    _core_config: BarcodeConfig = field(default_factory=BarcodeConfig)",
         "",
     ]
 
@@ -142,7 +142,7 @@ def generate_gui_module(config_classes_to_generate):
         "",
         "from dataclasses import dataclass, field",
         "import tkinter as tk",
-        "from core._config import *",
+        "from core.config import *",
         "",
     ]
 
