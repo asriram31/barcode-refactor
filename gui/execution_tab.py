@@ -1,9 +1,10 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
 
-from core import BarcodeConfig, InputConfig
+# from core import BarcodeConfig, InputConfig
+from gui.config import BarcodeConfigGUI, InputConfigGUI
 
-def create_execution_frame(parent, config: BarcodeConfig, input_config: InputConfig):
+def create_execution_frame(parent, config: BarcodeConfigGUI, input_config: InputConfigGUI):
     """Create the execution settings tab"""
     frame = ttk.Frame(parent)
 
