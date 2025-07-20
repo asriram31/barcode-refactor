@@ -22,11 +22,11 @@ def determine_channels_to_process(
     config: BarcodeConfig, total_channels: int
 ) -> List[int]:
     """Determine which channels to process based on config settings."""
-    if config.channels.parse_all_channels.get():
+    if config.channels.parse_all_channels:
         vprint("Total Channels:", total_channels)
         return list(range(total_channels))
     else:
-        channel_select = config.channels.selected_channel.get()
+        channel_select = config.channels.selected_channel
         # Handle negative indexing
         while channel_select < 0:
             channel_select = total_channels + channel_select
@@ -80,10 +80,10 @@ def save_analysis_results(
         print("Warning: No results to write - all files may have failed processing")
 
     # Generate barcode if enabled
-    if config.output.generate_dataset_barcode.get() and all_results:
+    if config.output.generate_dataset_barcode and all_results:
         try:
             # Multiple files: use all channels
-            if not is_single_file and config.channels.parse_all_channels.get():
+            if not is_single_file and config.channels.parse_all_channels:
                 gen_combined_barcode(all_results, barcode_path, separate_channels=False)
             else:
                 gen_combined_barcode(all_results, barcode_path)
@@ -108,7 +108,7 @@ def process_single_file(
     # Load and validate file
     try:
         counts = [count, total]
-        file = read_file(filepath, counts, config.quality.accept_dim_images.get())
+        file = read_file(filepath, counts, config.quality.accept_dim_images)
         count, total = counts
     except TypeError as e:
         raise TypeError(e)
@@ -133,7 +133,7 @@ def process_single_file(
 
         # Check for dim channels
         is_dim = check_channel_dim(file[:, :, :, channel])
-        if is_dim and not config.quality.accept_dim_channels.get():
+        if is_dim and not config.quality.accept_dim_channels:
             vprint("Channel too dim, not enough signal, skipping...")
             continue
         elif is_dim:
@@ -157,7 +157,7 @@ def process_single_file(
         results.intensity.flag += 1 if is_dim else 0
 
         # Create summary visualization
-        if config.output.save_graphs.get():
+        if config.output.save_graphs:
             from visualization import create_summary_visualization
 
             summary_path = os.path.join(channel_output_dir, "Summary Graphs.png")
@@ -214,7 +214,7 @@ def run_analysis(root_dir: str, config: BarcodeConfig) -> None:
     """Run analysis on a file or directory path."""
 
     # Set global verbose mode
-    set_verbose(config.output.verbose.get())
+    set_verbose(config.output.verbose)
 
     # Discover files to process
     files_to_process = discover_files(root_dir)

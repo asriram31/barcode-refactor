@@ -62,18 +62,18 @@ def calculate_optical_flow(
 
     start_frame, end_frame = frame_pair
 
-    frame_int = opt_config.frame_interval_s.get()
+    frame_int = opt_config.frame_interval_s
     if frame_int == 0:
         frame_int = 1
     # Convert from pixels/interval to nm/sec
-    speed_conversion_factor = opt_config.nm_pixel_ratio.get() / (
+    speed_conversion_factor = opt_config.nm_pixel_ratio / (
         frame_int * (end_frame - start_frame)
     )
 
-    params = (None, 0.5, 3, opt_config.window_size.get(), 3, 5, 1.2, 0)
+    params = (None, 0.5, 3, opt_config.window_size, 3, 5, 1.2, 0)
     flow = cv.calcOpticalFlowFarneback(images[start_frame], images[end_frame], *params)
 
-    flow_reduced = group_avg(flow, opt_config.downsample_factor.get())
+    flow_reduced = group_avg(flow, opt_config.downsample_factor)
     downU = np.flipud(flow_reduced[:, :, 0])
     downV = np.flipud(flow_reduced[:, :, 1])
 
@@ -145,17 +145,17 @@ def analyze_flow(
         return FlowResults()
 
     csvwriter, myfile = None, None
-    if out_config.save_intermediates.get():
+    if out_config.save_intermediates:
         filename = os.path.join(name, "OpticalFlow.csv")
         csvwriter, myfile = setup_csv_writer(filename)
 
     thetas, sigma_thetas, speeds = [], [], []
-    frame_step = opt_config.frame_step.get()
+    frame_step = opt_config.frame_step
     frame_pairs = calculate_frame_pairs(num_frames, frame_step)
 
     # Determine which frames to save visualizations for
     save_frames = set()
-    if out_config.save_graphs.get():
+    if out_config.save_graphs:
         save_frames = calculate_visualization_frames(frame_pairs, frame_step)
 
     for frame_pair in frame_pairs:
@@ -172,7 +172,7 @@ def analyze_flow(
             from visualization import save_flow_visualization
 
             save_flow_visualization(
-                flow, start_frame, name, opt_config.downsample_factor.get()
+                flow, start_frame, name, opt_config.downsample_factor
             )
 
         if csvwriter:
