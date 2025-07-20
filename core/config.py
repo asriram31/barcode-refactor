@@ -5,7 +5,7 @@ Generate GUI wrappers by running: python _config.py
 """
 
 from dataclasses import dataclass, field
-from typing import List
+from typing import Any, Dict, List
 import yaml
 from abc import ABC
 
@@ -177,14 +177,103 @@ class BarcodeConfig:
         if not isinstance(config_data, dict):
             raise ValueError("Error loading YAML: expected a dictionary structure")
 
-        # Build kwargs for each subconfig
+        try:
+            return cls._load_from_yaml(config_data)
+        except (KeyError, AssertionError) as e:
+            print(f"Error loading YAML: {e}")
+            pass
+
+        print(f"Attempting to load legacy YAML format from {filepath}")
+        try:
+            return cls._load_from_legacy_yaml(config_data)
+        except (KeyError, AssertionError) as e:
+            print(f"Error loading legacy YAML: {e}")
+            pass
+
+        raise ValueError(f"Unknown YAML format in {filepath}")
+
+    @classmethod
+    def _load_from_yaml(cls, config_data: Dict[str, Any]) -> "BarcodeConfig":
+        """Load configuration from YAML data."""
+
         kwargs = {}
-        for field_name, field_info in cls.__dataclass_fields__.items():
-            if field_name in config_data:
-                subconfig_class = field_info.default_factory
-                kwargs[field_name] = subconfig_class.from_dict(config_data[field_name])
+        for subconfig_class_name, subconfig_data in config_data.items():
+
+            assert (
+                subconfig_class_name in cls.__dataclass_fields__
+            ), f"Unknown configuration section: {subconfig_class_name}"
+
+            field_info = cls.__dataclass_fields__[subconfig_class_name]
+            subconfig_class = field_info.default_factory
+
+            assert callable(
+                subconfig_class
+            ), f"Expected {subconfig_class_name} to be a callable class, got {subconfig_class}"
+            assert issubclass(
+                subconfig_class, BaseConfig
+            ), f"Expected {subconfig_class_name} to be a subclass of BaseConfig"
+
+            # Get the config class and create new instance from dict
+            kwargs[subconfig_class_name] = subconfig_class.from_dict(subconfig_data)
 
         return cls(**kwargs)
+
+    @classmethod
+    def _load_from_legacy_yaml(cls, config_data: Dict[str, Any]) -> "BarcodeConfig":
+        """Load configuration from legacy YAML format."""
+
+        reader: dict = config_data["reader"]
+        writer: dict = config_data["writer"]
+
+        int_params: dict = config_data["coarse_parameters"]
+        int_eval_params: dict = int_params["evaluation_settings"]
+
+        flow_params: dict = config_data["flow_parameters"]
+
+        bin_params: dict = config_data["resilience_parameters"]
+        bin_eval_params: dict = bin_params["evaluation_settings"]
+
+        return BarcodeConfig(
+            channels=ChannelConfig(
+                parse_all_channels=reader["channel_select"] == "All",
+                selected_channel=(
+                    reader["channel_select"] if reader["channel_select"] != "All" else 0
+                ),
+            ),
+            quality=QualityConfig(
+                accept_dim_images=reader["accept_dim_images"],
+                accept_dim_channels=reader["accept_dim_channels"],
+            ),
+            analysis=AnalysisConfig(
+                enable_binarization=reader["resilience"],
+                enable_optical_flow=reader["flow"],
+                enable_intensity_distribution=reader["coarsening"],
+            ),
+            output=OutputConfig(
+                verbose=reader["verbose"],
+                save_graphs=reader["return_graphs"],
+                save_intermediates=writer["return_intermediates"],
+                generate_dataset_barcode=writer["stitch_barcode"],
+            ),
+            binarization=BinarizationConfig(
+                threshold_offset=bin_params["r_offset"],
+                frame_step=bin_params["frame_step"],
+                frame_start_percent=bin_eval_params["f_start"],
+                frame_stop_percent=bin_eval_params["f_stop"],
+            ),
+            optical_flow=OpticalFlowConfig(
+                frame_step=flow_params["frame_step"],
+                window_size=flow_params["win_size"],
+                downsample_factor=flow_params["downsample"],
+                nm_pixel_ratio=flow_params["nm_pixel_ratio"],
+                frame_interval_s=flow_params["frame_interval"],
+            ),
+            intensity_distribution=IntensityDistributionConfig(
+                first_frame=int_eval_params["first_frame"],
+                last_frame=int_eval_params["last_frame"],
+                frames_evaluation_percent=int_params["mean_mode_frames_percent"],
+            ),
+        )
 
 
 # === CONFIG GENERATION SETUP ===
