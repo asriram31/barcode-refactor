@@ -5,6 +5,7 @@ import matplotlib
 from tkinter import ttk, messagebox
 
 from core import BarcodeConfig, InputConfig, PreviewConfig, AggregationConfig
+
 from gui import (
     create_barcode_frame,
     create_binarization_frame,
@@ -15,16 +16,22 @@ from gui import (
     setup_main_window,
     setup_scrollable_container,
 )
+from gui.config import (
+    BarcodeConfigGUI,
+    InputConfigGUI,
+    PreviewConfigGUI,
+    AggregationConfigGUI,
+)
 
 matplotlib.use("Agg")
 
 
 def create_tabs(
     parent,
-    config: BarcodeConfig,
-    input_config: InputConfig,
-    preview_config: PreviewConfig,
-    aggregation_config: AggregationConfig,
+    config: BarcodeConfigGUI,
+    input_config: InputConfigGUI,
+    preview_config: PreviewConfigGUI,
+    aggregation_config: AggregationConfigGUI,
 ):
     """Create all tabs using our extracted components"""
     notebook = ttk.Notebook(parent, takefocus=0)
@@ -56,24 +63,24 @@ def create_processing_worker(
 ):
     """Create the worker function for processing in background thread"""
 
-    if input_config.configuration_file.get():
+    if input_config.configuration_file:
         try:
-            config = BarcodeConfig.load_from_yaml(input_config.configuration_file.get())
+            config = BarcodeConfig.load_from_yaml(input_config.configuration_file)
         except Exception as e:
             messagebox.showerror("Error reading config file", str(e))
             return
 
     def worker():
         try:
-            mode = input_config.mode.get()
+            mode = input_config.mode
 
             if mode == "agg":
                 from utils.writer import generate_aggregate_csv
 
                 # Handle CSV aggregation
-                combined_location = aggregation_config.output_location.get()
-                generate_agg_barcode = aggregation_config.generate_barcode.get()
-                sort_param = aggregation_config.sort_parameter.get()
+                combined_location = aggregation_config.output_location
+                generate_agg_barcode = aggregation_config.generate_barcode
+                sort_param = aggregation_config.sort_parameter
                 csv_paths = aggregation_config.csv_paths_list
 
                 if not csv_paths:
@@ -94,8 +101,8 @@ def create_processing_worker(
                 from core.pipeline import run_analysis
 
                 # Handle file/directory processing
-                file_path = input_config.file_path.get()
-                dir_path = input_config.dir_path.get()
+                file_path = input_config.file_path
+                dir_path = input_config.dir_path
 
                 if not (dir_path or file_path):
                     messagebox.showerror(
@@ -103,8 +110,8 @@ def create_processing_worker(
                     )
                     return
 
-                channels = config.channels.parse_all_channels.get()
-                channel_selection = config.channels.selected_channel.get()
+                channels = config.channels.parse_all_channels
+                channel_selection = config.channels.selected_channel
                 if not (channels or (channel_selection is not None)):
                     messagebox.showerror("Error", "No channel has been specified.")
                     return
@@ -134,19 +141,29 @@ def main():
     scrollable_frame, canvas = setup_scrollable_container(root)
 
     # Create configurations
-    config = BarcodeConfig()
-    input_config = InputConfig()
-    preview_config = PreviewConfig()
-    aggregation_config = AggregationConfig()
+    gui_config = BarcodeConfigGUI()
+    gui_input_config = InputConfigGUI()
+    gui_preview_config = PreviewConfigGUI()
+    gui_aggregation_config = AggregationConfigGUI()
 
     # Create tabs
     create_tabs(
-        scrollable_frame, config, input_config, preview_config, aggregation_config
+        scrollable_frame,
+        gui_config,
+        gui_input_config,
+        gui_preview_config,
+        gui_aggregation_config,
     )
 
     # Run button
     def on_run():
         setup_log_window(root)
+
+        # Convert GUI configs to pure data configs
+        config = gui_config.config
+        input_config = gui_input_config.config
+        aggregation_config = gui_aggregation_config.config
+
         worker = create_processing_worker(config, input_config, aggregation_config)
         threading.Thread(target=worker, daemon=True).start()
 
