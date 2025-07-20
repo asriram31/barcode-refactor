@@ -1,10 +1,10 @@
 import tkinter as tk
 from tkinter import ttk
 
-from core import BarcodeConfig
+from gui.config import BarcodeConfigGUI
 
 
-def create_flow_frame(parent, config: BarcodeConfig):
+def create_flow_frame(parent, config: BarcodeConfigGUI):
     """Create the optical flow settings tab"""
     frame = ttk.Frame(parent)
 

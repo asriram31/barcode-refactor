@@ -181,8 +181,8 @@ def extract_nd2_metadata(filepath: str, config: BarcodeConfig) -> None:
             nm_pix_ratio = 1000 / (ndfile.voxel_size()[0])
 
             # Update config with extracted metadata
-            config.optical_flow.frame_interval_s.set(frame_interval)
-            config.optical_flow.nm_pixel_ratio.set(nm_pix_ratio)
+            config.optical_flow.frame_interval_s = frame_interval
+            config.optical_flow.nm_pixel_ratio = nm_pix_ratio
 
             vprint(
                 f"Extracted ND2 metadata: frame_interval={frame_interval:.4f}s, nm_pixel_ratio={nm_pix_ratio:.2f}"

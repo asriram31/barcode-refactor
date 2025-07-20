@@ -165,13 +165,13 @@ def track_void(
         Tuple of (void_sizes, island_areas, island_areas_2nd, connectivity_flags)
     """
     num_frames = len(image)
-    threshold = bin_config.threshold_offset.get()
-    step = bin_config.frame_step.get()
+    threshold = bin_config.threshold_offset
+    step = bin_config.frame_step
 
     # Calculate which frames to process and visualize
     frame_indices = calculate_frame_indices(num_frames, step)
     save_frames = set()
-    if out_config.save_graphs.get():
+    if out_config.save_graphs:
         save_frames = calculate_visualization_frames(num_frames, step)
 
     # Initialize result lists
@@ -234,13 +234,13 @@ def analyze_binarization(
         return None, BinarizationResults()
 
     # Adjust frame step if too large for video
-    frame_step = bin_config.frame_step.get()
+    frame_step = bin_config.frame_step
     while len(image) <= frame_step:
         frame_step = int(frame_step / 5)
 
     # Setup CSV writer if needed
     csvwriter, myfile = None, None
-    if out_config.save_intermediates.get():
+    if out_config.save_intermediates:
         filename = os.path.join(name, "BinarizationData.csv")
         csvwriter, myfile = setup_csv_writer(filename)
 
@@ -255,10 +255,10 @@ def analyze_binarization(
 
     # Calculate analysis windows
     start_index = int(
-        np.floor(len(image) * bin_config.frame_start_percent.get() / frame_step)
+        np.floor(len(image) * bin_config.frame_start_percent / frame_step)
     )
     stop_index = int(
-        np.ceil(len(largest_void_lst) * bin_config.frame_stop_percent.get())
+        np.ceil(len(largest_void_lst) * bin_config.frame_stop_percent)
     )
     start_initial_index = int(np.ceil(len(image) * frame_initial_percent / frame_step))
 
@@ -272,7 +272,7 @@ def analyze_binarization(
 
     # Create visualization plot using extracted function
     fig = None
-    if out_config.save_graphs.get():
+    if out_config.save_graphs:
         from visualization import save_binarization_plot
 
         start_plot_index = 0  # Reset to 0 as in original

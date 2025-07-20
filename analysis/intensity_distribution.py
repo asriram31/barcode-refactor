@@ -22,9 +22,9 @@ def calculate_frame_indices(
 ) -> Tuple[int, int, int]:
     """Calculate frame indices for intensity analysis."""
 
-    first_frame_idx = int_config.first_frame.get()
-    last_frame_idx = int_config.last_frame.get()
-    frames_percent = int_config.frames_evaluation_percent.get()
+    first_frame_idx = int_config.first_frame
+    last_frame_idx = int_config.last_frame
+    frames_percent = int_config.frames_evaluation_percent
 
     num_frames_analysis = int(np.ceil(frames_percent * num_frames))
 
@@ -164,7 +164,7 @@ def analyze_intensity_distribution(
 
     # Setup CSV writer if needed
     csvwriter, myfile = None, None
-    if out_config.save_intermediates.get():
+    if out_config.save_intermediates:
         filename = os.path.join(name, "IntensityDistribution.csv")
         csvwriter, myfile = setup_csv_writer(filename)
 
@@ -189,7 +189,7 @@ def analyze_intensity_distribution(
 
     # Create visualization plot
     fig = None
-    if out_config.save_graphs.get():
+    if out_config.save_graphs:
         first_frame = image[first_frame_idx]
         # Handle last frame selection (matching original logic)
         final_frame_idx = (

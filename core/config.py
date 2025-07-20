@@ -1,174 +1,151 @@
-from abc import ABC
-from dataclasses import dataclass, field, Field, MISSING
-from typing import Dict, Any, List
+#!/usr/bin/env python3
+"""
+Pure dataclass configurations - no tkinter dependencies.
+Generate GUI wrappers by running: python _config.py
+"""
 
-import tkinter as tk
-from tkinter import Variable
+from dataclasses import dataclass, field
+from typing import Any, Dict, List
 import yaml
+from abc import ABC
 
+"""
+DEVELOPING GUIDE:
 
-def tk_int(value: int = 0) -> tk.IntVar:
-    return field(default_factory=lambda: tk.IntVar(value=value))
+1. Define your configuration options here.
 
+2. Add them to the __init__.py file in the core module to export them.
 
-def tk_double(value: float = 0.0) -> tk.DoubleVar:
-    return field(default_factory=lambda: tk.DoubleVar(value=value))
+3. Add them to the `GUI_CONFIG_CLASSES` list at the bottom.
 
+4. Run this file to generate GUI wrappers in the `gui` module.
 
-def tk_bool(value: bool = False) -> tk.BooleanVar:
-    return field(default_factory=lambda: tk.BooleanVar(value=value))
+    python core/_config.py
+    
+5. Use the generated GUI classes in your application.
 
+    `from gui.config import BarcodeConfigGUI as BarcodeGUI`
 
-def tk_string(value: str = "") -> tk.StringVar:
-    return field(default_factory=lambda: tk.StringVar(value=value))
+"""
 
 
 @dataclass
 class BaseConfig(ABC):
-    """Base class for config sections with automatic tkinter variable creation."""
+    """Base class for all configuration sections."""
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "BaseConfig":
-        """Create a config instance from a dictionary, auto-creating tkinter variables."""
-        kwargs = {}
+    def from_dict(cls, data: dict) -> "BaseConfig":
+        """Create config instance from dictionary."""
+        return cls(**data)
 
-        # Iterate over all fields in the dataclass
-        for field_name, field_info in cls.__dataclass_fields__.items():
-
-            assert isinstance(
-                field_info, Field
-            ), f"Expected {field_name} to be a dataclass field"
-
-            # Get the default factory to determine variable type
-            default_factory = field_info.default_factory
-
-            if field_name not in data:
-                raise ValueError(
-                    f"Missing required field '{field_name}' in configuration data"
-                )
-
-            value = data[field_name]
-
-            if not default_factory or default_factory == MISSING:
-                # If no default factory, use the value directly
-                kwargs[field_name] = value
-                print(
-                    f"No default factory for {field_name} of type {type(value)}, using value directly"
-                )
-                continue
-
-            # If a default factory is defined, create the tkinter variable
-            tk_var = default_factory()
-            assert isinstance(
-                tk_var, Variable
-            ), f"Expected {field_name} to be a tkinter Variable instance"
-
-            tk_var.set(value)
-            kwargs[field_name] = tk_var
-
-        return cls(**kwargs)
+    def to_dict(self) -> dict:
+        """Convert config to dictionary for serialization."""
+        return {
+            field_name: getattr(self, field_name)
+            for field_name in self.__dataclass_fields__
+        }
 
 
 @dataclass
 class InputConfig(BaseConfig):
     """File and data input configuration."""
 
-    file_path: tk.StringVar = tk_string()
-    dir_path: tk.StringVar = tk_string()
-    mode: tk.StringVar = tk_string("file")  # "file", "dir", "agg"
-    configuration_file: tk.StringVar = tk_string()
+    file_path: str = ""
+    dir_path: str = ""
+    mode: str = "file"  # "file", "dir", "agg"
+    configuration_file: str = ""
+    new_param: bool = False
 
 
 @dataclass
 class ChannelConfig(BaseConfig):
     """Channel selection and processing configuration."""
 
-    parse_all_channels: tk.BooleanVar = tk_bool()
-    selected_channel: tk.IntVar = tk_int(0)  # -3 to 4 range
+    parse_all_channels: bool = False
+    selected_channel: int = 0  # -3 to 4 range
 
 
 @dataclass
 class QualityConfig(BaseConfig):
     """Data quality and acceptance criteria."""
 
-    accept_dim_images: tk.BooleanVar = tk_bool()
-    accept_dim_channels: tk.BooleanVar = tk_bool()
+    accept_dim_images: bool = False
+    accept_dim_channels: bool = False
 
 
 @dataclass
 class AnalysisConfig(BaseConfig):
     """Analysis module selection and coordination."""
 
-    enable_binarization: tk.BooleanVar = tk_bool()
-    enable_optical_flow: tk.BooleanVar = tk_bool()
-    enable_intensity_distribution: tk.BooleanVar = tk_bool()
+    enable_binarization: bool = False
+    enable_optical_flow: bool = False
+    enable_intensity_distribution: bool = False
 
 
 @dataclass
 class OutputConfig(BaseConfig):
     """Output generation and format configuration."""
 
-    verbose: tk.BooleanVar = tk_bool()
-    save_graphs: tk.BooleanVar = tk_bool()
-    save_intermediates: tk.BooleanVar = tk_bool()
-    generate_dataset_barcode: tk.BooleanVar = tk_bool()
+    verbose: bool = False
+    save_graphs: bool = False
+    save_intermediates: bool = False
+    generate_dataset_barcode: bool = False
 
 
 @dataclass
 class BinarizationConfig(BaseConfig):
     """Binarization analysis parameters."""
 
-    threshold_offset: tk.DoubleVar = tk_double(0.1)  # -1.0 to 1.0
-    frame_step: tk.IntVar = tk_int(10)  # 1 to 100
-    frame_start_percent: tk.DoubleVar = tk_double(0.9)  # 0.5 to 0.9
-    frame_stop_percent: tk.DoubleVar = tk_double(1.0)  # 0.9 to 1.0
+    threshold_offset: float = 0.1  # -1.0 to 1.0
+    frame_step: int = 10  # 1 to 100
+    frame_start_percent: float = 0.9  # 0.5 to 0.9
+    frame_stop_percent: float = 1.0  # 0.9 to 1.0
 
 
 @dataclass
 class OpticalFlowConfig(BaseConfig):
     """Optical flow analysis parameters."""
 
-    frame_step: tk.IntVar = tk_int(10)
-    window_size: tk.IntVar = tk_int(32)
-    downsample_factor: tk.IntVar = tk_int(8)  # 1 to 1000
-    nm_pixel_ratio: tk.DoubleVar = tk_double(1.0)  # 1 to 1,000,000
-    frame_interval_s: tk.IntVar = tk_int(
-        1
-    )  # 1 to 1000 - matches main.py frame_interval_var
+    frame_step: int = 10
+    window_size: int = 32
+    downsample_factor: int = 8  # 1 to 1000
+    nm_pixel_ratio: float = 1.0  # 1 to 1,000,000
+    frame_interval_s: int = 1  # 1 to 1000
 
 
 @dataclass
 class IntensityDistributionConfig(BaseConfig):
     """Intensity distribution analysis parameters."""
 
-    first_frame: tk.IntVar = tk_int(1)  # minimum 1
-    last_frame: tk.IntVar = tk_int(0)  # 0 means auto-detect last frame
-    frames_evaluation_percent: tk.DoubleVar = tk_double(0.1)  # 0.01 to 0.2
+    first_frame: int = 1  # minimum 1
+    last_frame: int = 0  # 0 means auto-detect last frame
+    frames_evaluation_percent: float = 0.1  # 0.01 to 0.2
 
 
 @dataclass
 class PreviewConfig(BaseConfig):
     """GUI preview and visualization settings."""
 
-    sample_file: tk.StringVar = tk_string()
-    enable_live_preview: tk.BooleanVar = tk_bool(True)
+    sample_file: str = ""
+    enable_live_preview: bool = True
 
 
 @dataclass
 class AggregationConfig(BaseConfig):
     """CSV aggregation and post-processing configuration."""
 
-    output_location: tk.StringVar = tk_string()
-    generate_barcode: tk.BooleanVar = tk_bool()
-    sort_parameter: tk.StringVar = tk_string("Default")  # One of the metric headers
-    normalize_barcode: tk.BooleanVar = tk_bool()
-    csv_paths_list: List[str] = field(default_factory=list)  # List of CSV file paths
+    output_location: str = ""
+    generate_barcode: bool = False
+    sort_parameter: str = "Default"  # One of the metric headers
+    normalize_barcode: bool = False
+    csv_paths_list: List[str] = field(default_factory=list)
 
 
 @dataclass
 class BarcodeConfig:
     """Main configuration container for BARCODE application."""
 
+    # Core workflow configs
     channels: ChannelConfig = field(default_factory=ChannelConfig)
     quality: QualityConfig = field(default_factory=QualityConfig)
     analysis: AnalysisConfig = field(default_factory=AnalysisConfig)
@@ -183,31 +160,10 @@ class BarcodeConfig:
 
     def save_to_yaml(self, filepath: str) -> None:
         """Save configuration to YAML file."""
-        # Extract values from Tkinter variables for serialization
-
         config_data = {}
-        for subconfig_class_name, _ in self.__dataclass_fields__.items():
-
-            # Get the config object
-            subconfig_obj = getattr(self, subconfig_class_name)
-            assert isinstance(
-                subconfig_obj, BaseConfig
-            ), f"Expected {subconfig_class_name} to be a BaseConfig instance"
-
-            subconfig_data = {}
-
-            for attr_name, _ in subconfig_obj.__dataclass_fields__.items():
-
-                # Extract the tkinter variable
-                tk_var = getattr(subconfig_obj, attr_name)
-                assert isinstance(
-                    tk_var, Variable
-                ), f"Expected {attr_name} to be a tkinter Variable instance"
-
-                subconfig_data[attr_name] = tk_var.get()
-
-            # Add the data from this config object
-            config_data[subconfig_class_name] = subconfig_data
+        for field_name in self.__dataclass_fields__:
+            subconfig = getattr(self, field_name)
+            config_data[field_name] = subconfig.to_dict()
 
         with open(filepath, "w") as f:
             yaml.dump(config_data, f, default_flow_style=False, indent=2)
@@ -221,11 +177,28 @@ class BarcodeConfig:
         if not isinstance(config_data, dict):
             raise ValueError("Error loading YAML: expected a dictionary structure")
 
+        try:
+            return cls._load_from_yaml(config_data)
+        except (KeyError, AssertionError) as e:
+            print(f"Error loading YAML: {e}")
+            pass
+
+        print(f"Attempting to load legacy YAML format from {filepath}")
+        try:
+            return cls._load_from_legacy_yaml(config_data)
+        except (KeyError, AssertionError) as e:
+            print(f"Error loading legacy YAML: {e}")
+            pass
+
+        raise ValueError(f"Unknown YAML format in {filepath}")
+
+    @classmethod
+    def _load_from_yaml(cls, config_data: Dict[str, Any]) -> "BarcodeConfig":
+        """Load configuration from YAML data."""
+
         kwargs = {}
         for subconfig_class_name, subconfig_data in config_data.items():
 
-            print(f"Processing subconfig: {subconfig_class_name}")
-            print(f"Subconfig data: {subconfig_data}")
             assert (
                 subconfig_class_name in cls.__dataclass_fields__
             ), f"Unknown configuration section: {subconfig_class_name}"
@@ -244,3 +217,95 @@ class BarcodeConfig:
             kwargs[subconfig_class_name] = subconfig_class.from_dict(subconfig_data)
 
         return cls(**kwargs)
+
+    @classmethod
+    def _load_from_legacy_yaml(cls, config_data: Dict[str, Any]) -> "BarcodeConfig":
+        """Load configuration from legacy YAML format."""
+
+        reader: dict = config_data["reader"]
+        writer: dict = config_data["writer"]
+
+        int_params: dict = config_data["coarse_parameters"]
+        int_eval_params: dict = int_params["evaluation_settings"]
+
+        flow_params: dict = config_data["flow_parameters"]
+
+        bin_params: dict = config_data["resilience_parameters"]
+        bin_eval_params: dict = bin_params["evaluation_settings"]
+
+        return BarcodeConfig(
+            channels=ChannelConfig(
+                parse_all_channels=reader["channel_select"] == "All",
+                selected_channel=(
+                    reader["channel_select"] if reader["channel_select"] != "All" else 0
+                ),
+            ),
+            quality=QualityConfig(
+                accept_dim_images=reader["accept_dim_images"],
+                accept_dim_channels=reader["accept_dim_channels"],
+            ),
+            analysis=AnalysisConfig(
+                enable_binarization=reader["resilience"],
+                enable_optical_flow=reader["flow"],
+                enable_intensity_distribution=reader["coarsening"],
+            ),
+            output=OutputConfig(
+                verbose=reader["verbose"],
+                save_graphs=reader["return_graphs"],
+                save_intermediates=writer["return_intermediates"],
+                generate_dataset_barcode=writer["stitch_barcode"],
+            ),
+            binarization=BinarizationConfig(
+                threshold_offset=bin_params["r_offset"],
+                frame_step=bin_params["frame_step"],
+                frame_start_percent=bin_eval_params["f_start"],
+                frame_stop_percent=bin_eval_params["f_stop"],
+            ),
+            optical_flow=OpticalFlowConfig(
+                frame_step=flow_params["frame_step"],
+                window_size=flow_params["win_size"],
+                downsample_factor=flow_params["downsample"],
+                nm_pixel_ratio=flow_params["nm_pixel_ratio"],
+                frame_interval_s=flow_params["frame_interval"],
+            ),
+            intensity_distribution=IntensityDistributionConfig(
+                first_frame=int_eval_params["first_frame"],
+                last_frame=int_eval_params["last_frame"],
+                frames_evaluation_percent=int_params["mean_mode_frames_percent"],
+            ),
+        )
+
+
+# === CONFIG GENERATION SETUP ===
+# Define which configs should get GUI wrappers (edit this list as needed)
+GUI_CONFIG_CLASSES = [
+    InputConfig,
+    ChannelConfig,
+    QualityConfig,
+    AnalysisConfig,
+    OutputConfig,
+    BinarizationConfig,
+    OpticalFlowConfig,
+    IntensityDistributionConfig,
+    PreviewConfig,
+    AggregationConfig,
+]
+
+
+if __name__ == "__main__":
+    import sys, os
+
+    # Add the parent directory to sys.path to import core.config
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+    from gui.core import create_gui_configs
+
+    # Generate GUI configs
+    num_generated = create_gui_configs(GUI_CONFIG_CLASSES)
+
+    print("\n📋 Usage:")
+    print("  from gui import BarcodeConfigGUI")
+    print("  from gui import BinarizationConfigGUI as BinGUI  # Optional short names")
+    print("  gui_config = BarcodeConfigGUI(core_config)")
+    print(
+        "  threshold_slider = ttk.Scale(textvariable=gui_config.binarization.threshold_offset)"
+    )

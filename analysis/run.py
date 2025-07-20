@@ -20,13 +20,13 @@ def run_analysis_pipeline(
     figures = []
 
     # Run binarization analysis
-    if config.analysis.enable_binarization.get():
+    if config.analysis.enable_binarization:
         try:
             bfig, binarization_results = analyze_binarization(
                 file, output_dir, channel, config.binarization, config.output
             )
             results.binarization = binarization_results
-            if bfig and config.output.save_graphs.get():
+            if bfig and config.output.save_graphs:
                 figures.append(bfig)
         except Exception as e:
             with open(fail_file_loc, "a", encoding="utf-8") as log_file:
@@ -35,7 +35,7 @@ def run_analysis_pipeline(
                 )
 
     # Run optical flow analysis
-    if config.analysis.enable_optical_flow.get():
+    if config.analysis.enable_optical_flow:
         try:
             results.flow = analyze_flow(
                 file, output_dir, channel, config.optical_flow, config.output
@@ -47,13 +47,13 @@ def run_analysis_pipeline(
                 )
 
     # Run intensity distribution analysis
-    if config.analysis.enable_intensity_distribution.get():
+    if config.analysis.enable_intensity_distribution:
         try:
             ifig, intensity_results = analyze_intensity_distribution(
                 file, output_dir, channel, config.intensity_distribution, config.output
             )
             results.intensity = intensity_results
-            if ifig and config.output.save_graphs.get():
+            if ifig and config.output.save_graphs:
                 figures.append(ifig)
         except Exception as e:
             with open(fail_file_loc, "a", encoding="utf-8") as log_file:

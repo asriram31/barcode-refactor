@@ -1,11 +1,12 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
 
-from core import BarcodeConfig, AggregationConfig, ChannelResults
+from gui.config import BarcodeConfigGUI, AggregationConfigGUI
+from core import ChannelResults
 
 
 def create_barcode_frame(
-    parent, config: BarcodeConfig, aggregation_config: AggregationConfig
+    parent, config: BarcodeConfigGUI, aggregation_config: AggregationConfigGUI
 ):
     """Create the barcode generator + CSV aggregator tab"""
     frame = ttk.Frame(parent)

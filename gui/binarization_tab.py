@@ -7,15 +7,15 @@ import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from core import PreviewConfig, InputConfig, BarcodeConfig
+from gui.config import PreviewConfigGUI, InputConfigGUI, BarcodeConfigGUI
 from .preview_binarization import load_first_frame, binarize
 
 
 def create_binarization_frame(
     parent,
-    config: BarcodeConfig,
-    preview_config: PreviewConfig,
-    input_config: InputConfig,
+    config: BarcodeConfigGUI,
+    preview_config: PreviewConfigGUI,
+    input_config: InputConfigGUI,
 ):
     """Create the binarization settings tab with live preview"""
     frame = ttk.Frame(parent)
